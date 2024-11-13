@@ -1,9 +1,9 @@
 import os
-
-import pymol
-
 import ipd
 from ipd.dev.qt import MenuAction, isfalse_notify
+import ppp
+
+pymol = ipd.lazyimport('pymol')
 
 _startup_cmds_done = set()
 
@@ -15,7 +15,7 @@ def ensure_startup_cmd(cmd):
     ]):
         _startup_cmds_done.add(cmd)
 
-class ToggleCommand(ipd.ppp.PymolCMD):
+class ToggleCommand(ppp.client.PymolCMD):
     def __init__(self, widget, root, **kw):
         super().__init__(root.remote, **kw)
         self._root, self._widget = root, widget
@@ -57,8 +57,8 @@ class ToggleCommands(ipd.dev.qt.ContextMenuMixin):
         # widget.itemChanged.connect(lambda _: self.update_item(_))
         self.widget.itemClicked.connect(lambda _: self.update_item(_, toggle=True))
         self.newcmdwidget = pymol.Qt.QtWidgets.QDialog()
-        self.newcmdwidget = pymol.Qt.utils.loadUi(
-            os.path.join(os.path.dirname(__file__), 'gui_new_pymolcmd.ui'), self.newcmdwidget)
+        self.newcmdwidget = pymol.Qt.utils.loadUi(os.path.join(os.path.dirname(__file__), 'gui_new_pymolcmd.ui'),
+                                                  self.newcmdwidget)
         self.newcmdwidget.cancel.clicked.connect(lambda: self.newcmdwidget.hide())
 
     def _context_menu_items(self):
@@ -119,7 +119,7 @@ class ToggleCommands(ipd.dev.qt.ContextMenuMixin):
         fields = 'name cmdon cmdoff cmdstart sym ligand props attrs'
         kw = {k: ipd.dev.qt.widget_gettext(getattr(self.newcmdwidget, k)) for k in fields.split()}
         kw |= {k: bool(getattr(self.newcmdwidget, k).checkState()) for k in 'ispublic onstart'.split()}
-        return ipd.ppp.PymolCMDSpec(**kw)
+        return ppp.PymolCMDSpec(**kw)
 
     def create_command_done(self):
         cmdspec = self.create_cmdspec_from_gui()
@@ -128,7 +128,7 @@ class ToggleCommands(ipd.dev.qt.ContextMenuMixin):
             result = self.remote.upload(cmdspec)
             assert not result, result
         else:
-            cmd = ipd.ppp.PymolCMD(None, id=len(self.state.cmds) + 1, **cmdspec.model_dump())
+            cmd = ppp.PymolCMD(None, id=len(self.state.cmds) + 1, **cmdspec.model_dump())
             setattr(self.state.cmds, cmd.name, cmd)
         self.newcmdwidget.hide()
         self.refresh_command_list()

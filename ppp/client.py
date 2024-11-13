@@ -3,8 +3,8 @@ from pathlib import Path
 from subprocess import check_output
 
 import ipd
-from ipd import ppp
-from ipd.ppp.server.pppapi import PPPBackend
+import ppp
+from ppp.server.pppapi import PPPBackend
 
 requests = ipd.lazyimport('requests', pip=True)
 fastapi = ipd.lazyimport('fastapi', pip=True)
@@ -15,6 +15,7 @@ _wpcgit = 'git+https://github.com/willsheffler/wills_pymol_crap'
 wills_pymol_crap = ipd.lazyimport('wills_pymol_crap', _wpcgit, pip=True)
 pymol = ipd.lazyimport('pymol', 'pymol-bundle', mamba=True, channels='-c schrodinger')
 print = rich.print
+
 _GLOBAL_CLIENT = None
 
 def get_hack_fixme_global_client():
@@ -24,15 +25,14 @@ REMOTE_MODE = not os.path.exists('/net/scratch/sheffler')
 # profile = ipd.dev.timed
 profile = lambda f: f
 
-class PPPClient(ipd.crud.ClientBase, Backend=PPPBackend):
+class PPPClient(ipd.crud.ClientBase, Backend=PPPBackend):  # type: ignore
     def __init__(self, server_addr_or_testclient):
         super().__init__(server_addr_or_testclient)
-        assert self.get('/')['msg'] == 'Hello World'
         global _GLOBAL_CLIENT
-        _GLOBAL_CLIENT = self  #there should be a better way to do this
+        _GLOBAL_CLIENT = self  # there should be a better way to do this
 
     def preprocess_get(self, kw):
-        return ipd.ppp.fix_label_case(kw)
+        return ppp.fix_label_case(kw)
 
     def upload_poll(self, poll):
         print('upload_poll')
@@ -88,18 +88,19 @@ class PPPClient(ipd.crud.ClientBase, Backend=PPPBackend):
         rev = self.get(f'/reviews/byfname/{fname}')
         return [pppp.Review(self, **_) for _ in rev]
 
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# the backend models come from here
-# class DBProll
-# class DBFileKind
-# class DBPollFile
-# class DBReview
-# class DBReviewStep
-# class DBPymolCMD
-# class DBWorkflow
-# class DBFlowStep
-# class DBUser
-# class DBGroup
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-for cls in PPPClient.__client_models__.values():
-    globals()[cls.__name__] = cls
+Poll = PPPClient.__client_models__['poll']
+FileKind = PPPClient.__client_models__['filekind']
+PollFile = PPPClient.__client_models__['pollfile']
+Review = PPPClient.__client_models__['review']
+ReviewStep = PPPClient.__client_models__['reviewstep']
+PymolCMD = PPPClient.__client_models__['pymolcmd']
+Workflow = PPPClient.__client_models__['workflow']
+FlowStep = PPPClient.__client_models__['flowstep']
+User = PPPClient.__client_models__['user']
+Group = PPPClient.__client_models__['group']
+
+# def __setattr__(self, name, value):
+#     pass  # for the type checker to indicate
+
+# for cls in PPPClient.__client_models__.values():
+#     globals()[cls.__name__] = cls

@@ -1,6 +1,6 @@
 assert 0
 
-from ipd.ppp.models import *
+from ppp.specifications import *
 
 def DBPoll_clear(self, backend, ghost=True):
     for r in backend.select(DBReview, pollid=self.id):
@@ -16,10 +16,10 @@ import uuid
 from typing import Optional
 
 import ipd
-from ipd import ppp
+import ppp
 from ipd.crud.backend import Attrs, BackendModelBase, Props, attrs_default, props_default
 
-backend_models = ipd.crud.backend.make_backend_models(ipd.ppp.spec_models)
+backend_models = ipd.crud.backend.make_backend_models(ppp.spec_models)
 for cls in backend_models.values():
     globals()[cls.__name__] = cls
 
@@ -62,8 +62,7 @@ class DBPollFile(BackendModelBase, ppp.PollFileSpec, table=True):
     children: list['DBPollFile'] = Relationship(back_populates='parent')
     parentid: Optional[uuid.UUID] = Field(default=None, foreign_key='dbpollfile.id', nullable=True)
     parent: Optional['DBPollFile'] = Relationship(back_populates='children',
-                                                  sa_relationship_kwargs=dict(cascade="all",
-                                                                              remote_side='DBPollFile.id'))
+                                                  sa_relationship_kwargs=dict(cascade="all", remote_side='DBPollFile.id'))
 
 class DBReview(_DBWithUser, ppp.ReviewSpec, table=True):
     props: Props = props_default()
@@ -157,8 +156,8 @@ class DBGroup(_DBWithUser, ppp.GroupSpec, table=True):
     users: list['DBUser'] = Relationship(back_populates='groups', link_model=DBUserGroupLink)
     user: 'DBUser' = Relationship(back_populates='ownedgroups')
 
-backend_models = {name: globals()[f'DB{spec.__name__[:-4]}'] for name, spec in ipd.ppp.spec_models.items()}
-client_models = ipd.crud.frontend.make_client_models(ipd.ppp.spec_models, backend_models)
+backend_models = {name: globals()[f'DB{spec.__name__[:-4]}'] for name, spec in ppp.spec_models.items()}
+client_models = ipd.crud.frontend.make_client_models(ppp.spec_models, backend_models)
 
 def DBPoll_clear(self, backend, ghost=True):
     for r in backend.select(DBReview, pollid=self.id):

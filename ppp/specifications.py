@@ -9,44 +9,44 @@ from typing import Union
 import pydantic
 
 import ipd
-import ipd.ppp
+import ppp
 from ipd.crud import ModelRef, Unique
 from ipd.sym.guess_symmetry import guess_sym_from_directory, guess_symmetry
 
-class SpecWithProps(ipd.crud.SpecBase):
-    props: Union[list[str], str] = []
-    attrs: Union[dict[str, Union[str, int, float]], str] = {}
-
-    @pydantic.field_validator('props')
-    def valprops(cls, props):
-        if isinstance(props, (set, list)): return props
-        try:
-            props = ipd.dev.safe_eval(props)
-        except (NameError, SyntaxError):
-            if isinstance(props, str):
-                if not props.strip(): return []
-                props = [p.strip() for p in props.strip().split(',')]
-
-    @pydantic.field_validator('attrs')
-    def valattrs(cls, attrs):
-        if isinstance(attrs, dict): return attrs
-        try:
-            attrs = ipd.dev.safe_eval(attrs)
-        except (NameError, SyntaxError):
-            if isinstance(attrs, str):
-                if not attrs.strip(): return {}
-                attrs = {
-                    x.split('=').split(':')[0].strip(): x.split('=').split(':')[1].strip()
-                    for x in attrs.strip().split(',')
-                }
-        return attrs
+# class (ipd.crud.SpecBase):
+#     props: Union[list[str], str] = []
+#     attrs: Union[dict[str, Union[str, int, float]], str] = {}
+#
+#     @pydantic.field_validator('props')
+#     def valprops(cls, props):
+#         if isinstance(props, (set, list)): return props
+#         try:
+#             props = ipd.dev.safe_eval(props)
+#         except (NameError, SyntaxError):
+#             if isinstance(props, str):
+#                 if not props.strip(): return []
+#                 props = [p.strip() for p in props.strip().split(',')]
+#
+#     @pydantic.field_validator('attrs')
+#     def valattrs(cls, attrs):
+#         if isinstance(attrs, dict): return attrs
+#         try:
+#             attrs = ipd.dev.safe_eval(attrs)
+#         except (NameError, SyntaxError):
+#             if isinstance(attrs, str):
+#                 if not attrs.strip(): return {}
+#                 attrs = {
+#                     x.split('=').split(':')[0].strip(): x.split('=').split(':')[1].strip()
+#                     for x in attrs.strip().split(',')
+#                 }
+#         return attrs
 
 class SpecWithUser(ipd.crud.SpecBase):
     userid: ModelRef['UserSpec'] = pydantic.Field(default='anonymous_coward', validate_default=True)
     ispublic: bool = True
     telemetry: bool = False
 
-class PollSpec(SpecWithUser, SpecWithProps):
+class PollSpec(SpecWithUser):
     name: Unique[str]
     desc: str = ''
     path: str
@@ -63,7 +63,7 @@ class PollSpec(SpecWithUser, SpecWithProps):
         return int(nchain)
 
     def valpath(self, path):
-        if self.ghost or ipd.ppp.server.servermode(): return path
+        if self.ghost or ppp.server.servermode(): return path
         if digs := path.startswith('digs:'): path = path[5:]
         path = os.path.abspath(os.path.expanduser(path))
         if digs or not os.path.exists(path):
@@ -78,7 +78,7 @@ class PollSpec(SpecWithUser, SpecWithProps):
     @pydantic.model_validator(mode='after')
     def _validated(self):
         # sourcery skip: merge-duplicate-blocks, remove-redundant-if, set-comprehension, split-or-ifs
-        # if ipd.ppp.server.servermode(): return self  # client does validation
+        # if ppp.server.servermode(): return self  # client does validation
         # print('poll _validated not server')
         if self.id is not None: return self
         fix_label_case(self)
@@ -87,6 +87,8 @@ class PollSpec(SpecWithUser, SpecWithProps):
         self.name = self.name or os.path.basename(self.path)
         self.desc = self.desc or f'PDBs in {self.path}'
         self.sym = self.sym or guess_sym_from_directory(self.path, suffix=ipd.STRUCTURE_FILE_SUFFIX)
+        with contextlib.suppress(ImportError):
+            self = PollSpec_get_structure_properties(self)
         self = PollSpec_get_structure_properties(self)
         # print('poll _validated done')
         return self
@@ -117,7 +119,7 @@ class PollFileSpec(ipd.crud.SpecBase):
 
     @pydantic.field_validator('fname')
     def valfname(cls, fname):
-        if ipd.ppp.server.servermode() or ipd.ppp.REMOTE_MODE: return fname
+        if ppp.server.servermode() or ppp.REMOTE_MODE: return fname
         fname = os.path.abspath(fname)
         assert os.path.exists(fname)  # or check_output(['rsync', f'digs:{fname}'])
         return fname
@@ -139,7 +141,7 @@ class ReviewSpec(SpecWithUser):
     @pydantic.model_validator(mode='after')
     def _validated(self):
         if isinstance(self.pollfileid, str):
-            client = ipd.ppp.get_hack_fixme_global_client()
+            client = ppp.get_hack_fixme_global_client()
             if pfile := client.pollfile(pollid=self.pollid, fname=self.pollfileid):
                 self.pollfileid = pfile.id
             else:
@@ -177,7 +179,8 @@ class PymolCMDSpec(SpecWithUser):
     @pydantic.model_validator(mode='after')
     def _validated(self):
         fix_label_case(self)
-        if self.cmdcheck: PymolCMDSpec_validate_commands(self)
+        with contextlib.suppress(ImportError):
+            if self.cmdcheck: PymolCMDSpec_validate_commands(self)
         return self
 
 class WorkflowSpec(SpecWithUser):
@@ -208,8 +211,7 @@ class UserSpec(ipd.crud.SpecBase):
 class GroupSpec(SpecWithUser):
     name: Unique[str]
     users: list['UserSpec'] = []
-    userid: ModelRef['UserSpec', 'ownedgroups'] = pydantic.Field(default='anonymous_coward',
-                                                                 validate_default=True)
+    userid: ModelRef['UserSpec', 'ownedgroups'] = pydantic.Field(default='anonymous_coward', validate_default=True)
 
 _PML = 0
 
@@ -267,8 +269,8 @@ def PymolCMDSpec_validate_commands(command):
     PymolCMDSpec_validate_command(command, 'cmdoff')
     pymol.cmd.delete(f'TEST_OBJECT{_PML}')
     pymol.cmd.load('/tmp/tmp_pymol_session.pse')
-    if any(
-        [any(command._check_cmds_output.lower().count(err) for err in 'error unknown unrecognized'.split())]):
+    command._errors = ''
+    if any([any(command._check_cmds_output.lower().count(err) for err in 'error unknown unrecognized'.split())]):
         # raise PymolCMDSpecError('bad pymol commands', command._check_cmds_output)
         command._errors = command._check_cmds_output
     return command
@@ -298,8 +300,5 @@ def fix_label_case(thing):
     if 'ligand' in keys: set('ligand', get('ligand').upper())
     return thing
 
-spec_models = {
-    name.replace('Spec', '').lower(): cls
-    for name, cls in globals().items() if name.endswith('Spec')
-}
+spec_models = {name.replace('Spec', '').lower(): cls for name, cls in globals().items() if name.endswith('Spec')}
 assert not any(name.endswith('s') for name in spec_models)

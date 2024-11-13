@@ -1,5 +1,6 @@
 import ipd
-from ipd.ppp.plugin.ppppp.prettier_protein_project_pymol_plugin import *
+from ppp.plugin.ppppp.prettier_protein_project_pymol_plugin import *
+import ppp
 
 at = ipd.lazyimport('assertpy', pip=True).assert_that
 
@@ -9,8 +10,8 @@ def main():
     print('test_ppppp DONE', flush=True)
 
 def run_polls_stress_test():
-    server, backend = ipd.ppp.server.run(12345, 'postgresql://sheffler@192.168.0.154:5432/ppp')
-    client = ipd.ppp.PPPClient('127.0.0.1:12345')
+    server, backend = ppp.server.run(12345, 'postgresql://sheffler@192.168.0.154:5432/ppp')
+    client = ppp.PPPClient('127.0.0.1:12345')
     polls = client.pollinfo()
     print(len(polls))
     print(polls[0])
@@ -29,7 +30,7 @@ def run_pymol():
     pymol.finish_launching()
     # time.sleep(1)
     # pymol.cmd.do('plugin_load ppppp')
-    # ipd.ppp.plugin.ppppp.run()
+    # ppp.plugin.ppppp.run()
 
 if __name__ == '__main__':
     main()

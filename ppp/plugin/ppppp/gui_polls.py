@@ -1,15 +1,14 @@
-import duration as timedelta
+from pendulum import duration as timedelta
 import os
 import random
 import subprocess
 import traceback
 from subprocess import check_output
-
-import pymol
-
 import ipd
-from ipd import ppp
+import ppp
 from ipd.dev.qt import MenuAction, isfalse_notify, notify
+
+pymol = ipd.lazyimport('pymol')
 
 class PollInProgress:
     def __init__(self, root, state, remote, poll):
@@ -60,10 +59,7 @@ class PollInProgress:
         return True
 
     def record_review(self, grade, comment):
-        review = ppp.ReviewSpec(grade=grade,
-                                comment=comment,
-                                pollid=self.poll.id,
-                                fname=self.fnames[self.index])
+        review = ppp.ReviewSpec(grade=grade, comment=comment, pollid=self.poll.id, fname=self.fnames[self.index])
         if self.state.do_review_action and not self.exec_review_action(review): return
         response = self.remote.upload_review(review, self.fnames[self.index])
         if isfalse_notify(not response, f'upload file server response: {response}'): return

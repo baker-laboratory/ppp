@@ -4,7 +4,7 @@ import sys
 from uuid import UUID
 
 import ipd
-from ipd import ppp
+import ppp
 
 fastapi = ipd.lazyimport('fastapi', 'fastapi[standard]', pip=True)
 pydantic = ipd.lazyimport('pydantic', pip=True)
@@ -28,14 +28,13 @@ def set_servermode(isserver):
     # print('_SERVERMODE MODE')
 
 @profile
-class PPPBackend(ipd.crud.backend.BackendBase, models=ipd.ppp.spec_models):
+class PPPBackend(ipd.crud.backend.BackendBase, models=ppp.spec_models):  # type: ignore
     def __init__(self, engine, datadir):
         super().__init__(engine)
         self.datadir = datadir
         set_servermode(True)
 
     def init_routes(self):
-        self.route('/api', self.root, methods=['GET'])
         self.route('/api/create/pollfilecontents', self.create_file_with_content, methods=['POST'])
         self.route('/api/create/pollfiles', self.create_empty_files, methods=['POST'])
         self.route('/api/have/pollfile', self.have_pollfile, methods=['GET'])
@@ -43,10 +42,10 @@ class PPPBackend(ipd.crud.backend.BackendBase, models=ipd.ppp.spec_models):
 
     def initdb(self):
         super().initdb()
-        ppp.server.defaults.ensure_init_db(self)
+        ppp.server.ensure_init_db(self)
 
-    def root(self) -> None:
-        return dict(msg='Hello World')
+    def add_defaults(self, **kw):
+        if not self.pymolcmds(): ppp.server.add_defaults(**kw)
 
     def useridmap(self):
         query = 'SELECT id,name FROM dbuser WHERE NOT dbuser.ghost'
@@ -135,4 +134,4 @@ def pymol_launch():
     pymol.cmd.set('suspend_updates', 'on')
 
 def run(**kw):
-    return ipd.crud.run[PPPBackend, ipd.ppp.PPPClient](**kw)
+    return ipd.crud.run[PPPBackend, ppp.PPPClient](**kw)

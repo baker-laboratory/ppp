@@ -14,7 +14,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -160,3 +159,18 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+log
+/*.cif
+/*.pdb
+*.sublime-workspace
+.qtcreator
+\#*
+*\#
+*~
+ppp_server_data
+.qtc_clangd
+slurm_logs_*
+.yapf_hash
+server_datadir
+ppp.db

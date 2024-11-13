@@ -14,7 +14,7 @@ if config.config_file_name is not None:
 
 from sqlmodel import SQLModel
 
-from ipd.ppp.server import *
+from ppp.server import *
 
 target_metadata = SQLModel.metadata
 

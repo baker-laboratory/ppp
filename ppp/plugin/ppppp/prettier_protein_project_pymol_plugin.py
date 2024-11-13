@@ -5,20 +5,18 @@ import threading
 import time
 from functools import partial
 
-import pymol
 from rich import print
 
 import ipd
-from ipd import ppp
+import ppp
 from ipd.dev.qt import isfalse_notify
 
+pymol = ipd.lazyimport('pymol')
 it = ipd.lazyimport('itertools', 'more_itertools', pip=True)
 requests = ipd.lazyimport('requests', pip=True)
 # fuzzyfinder = ipd.lazyimport('fuzzyfinder', pip=True)
 yaml = ipd.lazyimport('yaml', 'pyyaml', pip=True)
 wpc = ipd.lazyimport('wills_pymol_crap', 'git+https://github.com/willsheffler/wills_pymol_crap.git', pip=True)
-ipd.h
-wpc.pymol_util
 
 remote, state, ppppp = None, None, None
 ISGLOBALSTATE, ISPERPOLLSTATE = set(), set()
@@ -160,11 +158,11 @@ def run_local_server(port=54321):
     return ppp.PPPClient(f'127.0.0.1:{port}')
 
 def run(_self=None):
-    from ipd.ppp.plugin.ppppp.ppppp_defaults import state_defaults, state_types
+    from ppp.plugin.ppppp.ppppp_defaults import state_defaults, state_types
     os.makedirs(os.path.dirname(SESSION_RESTORE), exist_ok=True)
     os.makedirs(os.path.dirname(PPPPP_PICKLE), exist_ok=True)
     if os.path.exists(SESSION_RESTORE): os.remove(SESSION_RESTORE)
-    pymol.cmd.do('from ipd.ppp.plugin.ppppp.prettier_protein_project_pymol_plugin '
+    pymol.cmd.do('from ppp.plugin.ppppp.prettier_protein_project_pymol_plugin '
                  'import ppp_pymol_get, ppp_pymol_set, ppp_pymol_add_default')
     global ppppp, remote, state
     state = ipd.dev.StateManager(CONFIG_FILE, STATE_FILE, state_types, state_defaults)

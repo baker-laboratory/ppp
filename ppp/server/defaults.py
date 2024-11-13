@@ -1,18 +1,20 @@
+import contextlib
 import os
 
 import yaml
 from rich import print
 
+from ipd.crud.frontend import ClientBase
 import ipd.dev
-from ipd import ppp
+import ppp
 
 @ipd.dev.profile
 def ensure_init_db(backend):
     if not backend.users():
-        backend.session.add(ppp.server.DBUser.from_spec(ppp.UserSpec(name='admin')))
-        backend.session.add(ppp.server.DBUser.from_spec(ppp.UserSpec(name='sheffler')))
-        backend.session.add(ppp.server.DBUser.from_spec(ppp.UserSpec(name='anonymous_coward')))
-        backend.session.add(ppp.server.DBUser.from_spec(ppp.UserSpec(name='test')))
+        backend.newuser(name='admin')
+        backend.newuser(name='sheffler')
+        backend.newuser(name='anonymous_coward')
+        backend.newuser(name='test')
         backend.session.commit()
         admin = backend.user(dict(name='admin'))
         assert admin
@@ -41,17 +43,19 @@ def ensure_init_db(backend):
         assert file
 
 @ipd.dev.profile
-def add_defaults(stress_test_polls=False, **kw):
+def add_defaults(client: ClientBase | None = None, stress_test_polls=False, **kw):
     # print('ADD DEFAULTS')
-    import pymol
-    pymol.cmd.set('suspend_updates', 'on')
-    pymol.cmd.do('from ipd.ppp.plugin.ppppp.prettier_protein_project_pymol_plugin '
-                 'import ppp_pymol_get, ppp_pymol_set, ppp_pymol_add_default')
-    client = ppp.get_hack_fixme_global_client()
+    with contextlib.suppress(ImportError):
+        import pymol
+        pymol.cmd.set('suspend_updates', True)
+        pymol.cmd.do('from ppp.plugin.ppppp.prettier_protein_project_pymol_plugin '
+                     'import ppp_pymol_get, ppp_pymol_set, ppp_pymol_add_default')
+    client = client or ppp.get_hack_fixme_global_client()
     add_builtin_cmds(client)
     add_sym_cmds(client)
     if stress_test_polls: add_polls(client, stress_test_polls)
-    pymol.cmd.set('suspend_updates', 'off')
+    if 'pymol' in locals():
+        pymol.cmd.set('suspend_updates', False)
     # print(len(client.pymolcmds()))
     # print('------------------- DONE ADD DEFAULTS -------------------')
 
@@ -125,8 +129,7 @@ def add_sym_cmds(client):
         cmd = ppp.PymolCMDSpec(
             name=f'sym: Make {sym.upper()}',
             cmdstart='from wills_pymol_crap import symgen',
-            cmdon=
-            f'symgen.make{sym}("$subject", name="{sym}"); delete $subject; cmd.set_name("{sym}", "$subject")',
+            cmdon=f'symgen.make{sym}("$subject", name="{sym}"); delete $subject; cmd.set_name("{sym}", "$subject")',
             cmdoff='remove not chain A',
             sym=sym,
             cmdcheck=False,

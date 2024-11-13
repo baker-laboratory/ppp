@@ -1,6 +1,7 @@
 import os
+import ipd
 
-import pymol
+pymol = ipd.lazyimport('pymol')
 
 class SubjectName:
     def __init__(self):

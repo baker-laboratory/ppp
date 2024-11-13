@@ -10,7 +10,7 @@ with contextlib.suppress(ImportError):
     newpath = f'/home/sheffler/project/ppp/lib/python3.{sys.version_info.minor}/site-packages'
     sys.path.append(newpath)
     print('PATH ADDED TO sys.path:', newpath)
-    from ipd.ppp.plugin.ppppp.prettier_protein_project_pymol_plugin import *
+    from ppp.plugin.ppppp.prettier_protein_project_pymol_plugin import *
 
     def __init_plugin__(app=None):
         sys.stderr.write('init pymol plugin')

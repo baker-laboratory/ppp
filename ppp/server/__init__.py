@@ -1,2 +1,2 @@
-from ipd.ppp.server.defaults import *
-from ipd.ppp.server.pppapi import *
+from ppp.server.defaults import *
+from ppp.server.pppapi import *

@@ -1,0 +1,3 @@
+[submodule "lib/ipd"]
+	path = lib/ipd
+	url = https://github.com/baker-laboratory/ipd.git
