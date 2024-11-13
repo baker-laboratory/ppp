@@ -5,20 +5,18 @@ import threading
 import time
 from functools import partial
 
-import pymol
 from rich import print
 
 import ipd
 import ppp
 from ipd.dev.qt import isfalse_notify
 
+pymol = ipd.lazyimport('pymol')
 it = ipd.lazyimport('itertools', 'more_itertools', pip=True)
 requests = ipd.lazyimport('requests', pip=True)
 # fuzzyfinder = ipd.lazyimport('fuzzyfinder', pip=True)
 yaml = ipd.lazyimport('yaml', 'pyyaml', pip=True)
 wpc = ipd.lazyimport('wills_pymol_crap', 'git+https://github.com/willsheffler/wills_pymol_crap.git', pip=True)
-ipd.h
-wpc.pymol_util
 
 remote, state, ppppp = None, None, None
 ISGLOBALSTATE, ISPERPOLLSTATE = set(), set()

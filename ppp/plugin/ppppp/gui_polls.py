@@ -4,12 +4,11 @@ import random
 import subprocess
 import traceback
 from subprocess import check_output
-
-import pymol
-
 import ipd
 import ppp
 from ipd.dev.qt import MenuAction, isfalse_notify, notify
+
+pymol = ipd.lazyimport('pymol')
 
 class PollInProgress:
     def __init__(self, root, state, remote, poll):

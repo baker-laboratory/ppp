@@ -1,3 +1,4 @@
+import contextlib
 import os
 
 import yaml
@@ -44,15 +45,17 @@ def ensure_init_db(backend):
 @ipd.dev.profile
 def add_defaults(client: ClientBase | None = None, stress_test_polls=False, **kw):
     # print('ADD DEFAULTS')
-    import pymol
-    pymol.cmd.set('suspend_updates', True)
-    pymol.cmd.do('from ppp.plugin.ppppp.prettier_protein_project_pymol_plugin '
-                 'import ppp_pymol_get, ppp_pymol_set, ppp_pymol_add_default')
+    with contextlib.suppress(ImportError):
+        import pymol
+        pymol.cmd.set('suspend_updates', True)
+        pymol.cmd.do('from ppp.plugin.ppppp.prettier_protein_project_pymol_plugin '
+                     'import ppp_pymol_get, ppp_pymol_set, ppp_pymol_add_default')
     client = client or ppp.get_hack_fixme_global_client()
     add_builtin_cmds(client)
     add_sym_cmds(client)
     if stress_test_polls: add_polls(client, stress_test_polls)
-    pymol.cmd.set('suspend_updates', False)
+    if 'pymol' in locals():
+        pymol.cmd.set('suspend_updates', False)
     # print(len(client.pymolcmds()))
     # print('------------------- DONE ADD DEFAULTS -------------------')
 

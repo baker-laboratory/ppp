@@ -1,10 +1,9 @@
 import os
-
-import pymol
-
 import ipd
 from ipd.dev.qt import MenuAction, isfalse_notify
 import ppp
+
+pymol = ipd.lazyimport('pymol')
 
 _startup_cmds_done = set()
 
