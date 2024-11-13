@@ -4,13 +4,14 @@ from typing import Any
 import pymol
 
 import ipd
+import ppp
 from ipd.dev.qt import MenuAction, isfalse_notify
-from ipd.ppp.plugin.ppppp.gui_commands import ToggleCommands
+from ppp.plugin.ppppp.gui_commands import ToggleCommands
 
-class FlowStepGui(ipd.ppp.FlowStepSpec):
+class FlowStepGui(ppp.FlowStepSpec):
     widget: Any
 
-class WorkflowGui(ipd.ppp.WorkflowSpec):
+class WorkflowGui(ppp.WorkflowSpec):
     guisteps: list[FlowStepGui]
 
 class WorkflowStepCmdList(ipd.dev.qt.ContextMenuMixin):
@@ -154,8 +155,8 @@ class WorkflowCreatorGui(ToggleCommands):
         self.widget.setDragEnabled(True)
         self.selstep = None
         self.init_session(self.widget)
-        self.newflowwidget.findcmd.textChanged.connect(
-            lambda _: (setattr(self.state, 'findcmd', _), self.update_commands_gui()))
+        self.newflowwidget.findcmd.textChanged.connect(lambda _:
+                                                       (setattr(self.state, 'findcmd', _), self.update_commands_gui()))
         self.new_flow_step()
 
     def new_flow_step(self):

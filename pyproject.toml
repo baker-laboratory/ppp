@@ -1,0 +1,96 @@
+[build-system]
+requires = ['hatchling']
+build-backend = 'hatchling.build'
+
+[project]
+name = 'ppp'
+version = '0.1'
+dependencies = [
+    'assertpy',
+    'colorlog',
+    'compact-json',
+    'debugpy',
+    # 'eliot-tree',
+    'gitpython',
+    'hydra-core',
+    'hypothesis[numpy]',
+    'icecream',
+    'ipython',
+    'ipykernel',
+    'ipywidgets',
+    'ipdb',
+    'more_itertools',
+    'numba',
+    'numpy',
+    'opt_einsum',
+    # 'pre-commit',
+    'pandas',
+    'plotly',
+    'pendulum',
+    'pydantic',
+    'pdot',
+    'pyright[nodejs]',
+    'pytest',
+    'pytest-sugar',
+    'pytest-xdist',
+    'pytest-cov',
+    'pytest-benchmark',
+    'pytest-dotenv',
+    'python-box',
+    'requests',
+    'RestrictedPython',
+    'ruff',
+    'seaborn',
+    'submitit',
+    'tqdm',
+    'typer',
+    'yapf',
+    'fastapi[standard]',
+    'psycopg2',
+    'sqlmodel',
+    'uvicorn[standard]',
+]
+
+[tool.pytest.ini_options]
+minversion = '6.0'
+addopts = '-m "not ci" --disable-warnings -q'
+pythonpath = '.'
+testpaths = [
+    'ppp/tests',
+    'lib/ipd/ipd/tests',
+]
+markers = [
+    'slow: marks tests as slow to run',
+    'fast: tests that run in a second or two',
+    'ci: tests that should only run in ci',
+]
+
+[tool.yapf]
+based_on_style = 'pep8'
+indent_width = 4
+column_limit = 123
+blank_line_before_nested_class_or_def = false
+blank_lines_around_top_level_definition = 1
+
+[tool.pyright]
+include = ['ppp', 'ipd' ]
+extends = 'lib/ipd/pyproject.toml'
+
+[tool.ruff]
+lint.ignore = [
+   'E731', #  [ ] Do not assign a `lambda` expression, use a `def`
+   'E402', #  [ ] Module level import not at top of file
+   'E741', #  [ ] Ambiguous variable name: `I`
+   'E701', #  [ ] Multiple statements on one line (colon)
+   'F403', #  [ ] `from Attention_module import *` used; unable to detect undefined names
+   'F405',
+   'F821',
+   'F841',
+
+]
+lint.dummy-variable-rgx = '^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?)|ic)$'
+line-length = 123
+target-version = 'py39'
+format.quote-style = 'single'
+format.indent-style = 'space'
+format.docstring-code-format = true
